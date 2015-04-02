@@ -1,0 +1,30 @@
+{% extends "base.html"  %}
+
+{% block content %}
+<form method="POST" action="">
+	<!-- need to be passed for security purpose -->
+	{% csrf_token %}
+	
+	<!-- cheking whether loginform is valid -->
+	{% if  loginform.errors %} <p>Please correct the fields</p>{% endif %}
+	
+	<!--loginform layout -->
+	<!--Username-->
+	<div class="register_div">
+		{% if  loginform.username.errors %} <p class="error">{{ loginform.username.errors }}</p>{% endif %}
+		<p><label for="username" {% if loginform.username.errors %} class="error"{% endif %}>Username:</label>{{loginform.username}}</p>
+	</div>
+	<hr>
+
+	<!--Password-->
+	<div class="register_div">
+		{% if loginform.password.errors %} <p class="error">{{ loginform.password.errors }}</p>{% endif %}
+		<p><label for="password" {% if loginform.password.errors %} class="error"{% endif %}>Password:</label>{{loginform.password}}</p>
+	</div>
+	<hr>
+	
+	<p><input  type="submit"  value="Login" /></p>
+	
+</form>
+<a href="/resetpassword/">Forget Password</a>
+{% endblock %}

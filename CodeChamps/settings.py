@@ -26,8 +26,23 @@ TEMPLATE_DEBUG = True
 
 ALLOWED_HOSTS = []
 
+#email sending settings
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'tysemminiproject@gmail.com'
+EMAIL_HOST_PASSWORD = 'jp5project'
+EMAIL_PORT = 587
 
-# Application definition
+
+
+#proivde our get_profile()
+AUTH_PROFILE_MODULE='Developer.Developers'
+
+#url for login required decorator
+LOGIN_URL="/login/"
+
+
+# Application definition 
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -36,6 +51,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'Developers',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -80,4 +96,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
 
+STATIC_ROOT =  os.path.join(BASE_DIR, 'static','static_root')
+MEDIA_ROOT= os.path.join(BASE_DIR, 'static','media')
+
+MEDIA_URL='/media/'
+
 STATIC_URL = '/static/'
+STATICFILES_DIRS=(
+    os.path.join(BASE_DIR, 'static','static_dirs'),
+)
+
