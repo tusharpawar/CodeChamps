@@ -2,17 +2,8 @@ from django import forms
 from django.contrib.auth.models import User
 from django.forms import ModelForm
 from .models import Developer
-'''#new
-from django.forms.extras.widgets import SelectDateWidget
-from django.contrib.auth.tokens import default_token_generator
-from django.contrib.auth import authenticate, get_user_model
-from django.core.mail import send_mail
-from django.contrib.sites.models import get_current_site
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
-from django.template import loader
-import datetime
-'''
+
+#Registraion Form
 class RegistrationForm(ModelForm):
     username=forms.CharField(label='User name')
     email=forms.EmailField(label='Email')
@@ -21,8 +12,8 @@ class RegistrationForm(ModelForm):
 
     class Meta:
         model=Developer
-        exclude=('user','problems_list','ref_id')
-
+        exclude=('user','problems_list','ref_id','prpoic')
+    #CHEKING VALID USERNAME
     def clean_username(self):
         username=self.cleaned_data['username']
         try:
@@ -36,7 +27,26 @@ class RegistrationForm(ModelForm):
             raise forms.ValidationError("The password does not match ")
         return self.cleaned_data
     
+    
+    
+#Login Form
 class LoginForm(forms.Form):
     username=forms.CharField(label='User name')
     password=forms.CharField(label='Password',widget=forms.PasswordInput(render_value=False))
 
+#Profile Update Form
+class UpdateForm(forms.Form):
+    name=forms.CharField(label='Name')
+    email=forms.EmailField(label='Email')
+    
+# Password Change
+
+class ChangePasswordForm(forms.Form):
+    original=forms.CharField(label='Original',widget=forms.PasswordInput(render_value=False))
+    new_password=forms.CharField(label='New Password',widget=forms.PasswordInput(render_value=False))
+    new_password_verify=forms.CharField(label='Verify New Password',widget=forms.PasswordInput(render_value=False))
+
+#profile pic upload form
+class ProfilePicUploadForm(forms.Form):
+    """Image upload form."""
+    image = forms.ImageField()

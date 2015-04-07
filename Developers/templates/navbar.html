@@ -24,17 +24,12 @@
                         <a href="#page-top"></a>
                     </li>
                     <li class="page-scroll">
-                        <a href="#portfolio">Problems</a>
+                        <a href="#portfolio">Practice</a>
                     </li>
-                    <li class="page-scroll">
-                        <a href="#about">About</a>
-                    </li>
-                    <li class="page-scroll">
-                        <a href="#contact">Contact</a>
-                    </li>
+                   
 					<li class="page-scroll">
 						{% if user.is_authenticated %}
-						<a href="#contact">{{user.username}}</a>
+						<a href="/profile/{{developer.ref_id}}">{{user.username}}</a>
 						{% endif %}
                         
                     </li>
