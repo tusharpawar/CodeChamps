@@ -162,22 +162,24 @@ def upload_profile_pic(request):
     print 1
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/login/')
-    
-        if request.method == 'POST':
-            print 3
-            print form.is_valid(),form.errors 
-            if form.is_valid():
-                dev = Develeoper.objects.get(user=request.user)
-                dev.propic = request.FILES['image']
-                print dev.propiv,request.FILES['image']
-                dev.save()
-                return render_to_response('profile.html',{'Message':'Success ic changeing pic'} ,context_instance=RequestContext(request)) 
-            else:
+    print 2
+    if request.method == 'POST':
+        print 3
+        print form.is_valid(),form.errors 
+        if form.is_valid():
+            dev = Developer.objects.get(user=request.user)
+            dev.propic.delete(False)
+            dev.propic = request.FILES['image']
+            print dev.propic,request.FILES['image']
+            dev.save()
+            return render_to_response('profile.html',{'Message':'Success ic changeing pic'} ,context_instance=RequestContext(request)) 
+           
+        else:
                 Error="image invlaid"
                 return render_to_response('changeprofilepic.html',          {'form':form,'developer':dev,'error':Error},context_instance=RequestContext(request)) 
-        else:
-                return render_to_response('changeprofilepic.html',  {'form':form,'developer':dev},context_instance=RequestContext(request)) 
     else:
-        return render_to_response('changeprofilepic.html',{'form':form,'developer':dev},context_instance=RequestContext(request)) 
+                return render_to_response('changeprofilepic.html',  {'form':form,'developer':dev},context_instance=RequestContext(request)) 
+    
+    #    return render_to_response('changeprofilepic.html',{'form':form,'developer':dev},context_instance=RequestContext(request)) 
         
         

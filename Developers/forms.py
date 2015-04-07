@@ -49,4 +49,5 @@ class ChangePasswordForm(forms.Form):
 #profile pic upload form
 class ProfilePicUploadForm(forms.Form):
     """Image upload form."""
-    image = forms.ImageField()
+    image = forms.ImageField(label='Your new image' )
+   

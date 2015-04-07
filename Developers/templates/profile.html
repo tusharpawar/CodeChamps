@@ -52,7 +52,11 @@
 		<div class="row">
 		
 			<div class="col-md-3">
-				<img src="{% static 'img/profile.png'%}" class="img-circle" style="width:60%;float:right;margin-right: -0.5%;">
+				{% if not developer.propic  %}
+					<img src="{% static 'img/profile.png'%}" class="img-circle" style="width:100%;float:right;margin-right: -0.5%;">
+				{% else %}
+					<img src="{{developer.propic.url}}" class="img-circle" style="width:100%;float:right;margin-right: -0.5%;">
+				{% endif %}
 			</div>
 			<div class="col-md-7">
 				
