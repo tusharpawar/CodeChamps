@@ -38,6 +38,7 @@ def DeveloperRegistrations(request):
                       country=form.cleaned_data['country'])
             developer.save()
             return HttpResponseRedirect('/profile/'+s)
+           
              
         else:
             return render_to_response('register.html',{'form':form},context_instance=RequestContext(request))
@@ -159,27 +160,33 @@ def ChangePassword(request):
 def upload_profile_pic(request):
     form = ProfilePicUploadForm(request.POST, request.FILES) 
     dev = Developer.objects.get(user=request.user)
-    print 1
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/login/')
-    print 2
     if request.method == 'POST':
-        print 3
-        print form.is_valid(),form.errors 
         if form.is_valid():
             dev = Developer.objects.get(user=request.user)
-            dev.propic.delete(False)
+            dev.propic.delete(True)
             dev.propic = request.FILES['image']
             print dev.propic,request.FILES['image']
             dev.save()
-            return render_to_response('profile.html',{'Message':'Success ic changeing pic'} ,context_instance=RequestContext(request)) 
-           
+            print 'goin to profile'
+            red_link='/profile/'+dev.ref_id
+            return HttpResponseRedirect(red_link)
         else:
-                Error="image invlaid"
-                return render_to_response('changeprofilepic.html',          {'form':form,'developer':dev,'error':Error},context_instance=RequestContext(request)) 
+            Error="image invlaid"
+            return render_to_response('changeprofilepic.html',        {'form':form,'developer':dev,'error':Error},context_instance=RequestContext(request)) 
     else:
                 return render_to_response('changeprofilepic.html',  {'form':form,'developer':dev},context_instance=RequestContext(request)) 
     
     #    return render_to_response('changeprofilepic.html',{'form':form,'developer':dev},context_instance=RequestContext(request)) 
         
-        
+
+#remove profile pic
+def remove_profile_pic(request):
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/login/')
+    else:
+        dev = Developer.objects.get(user=request.user)
+        dev.propic.delete(True)
+        red_link='/profile/'+dev.ref_id
+        return HttpResponseRedirect(red_link)

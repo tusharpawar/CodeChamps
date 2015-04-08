@@ -32,19 +32,19 @@
 			<br>
 			<br>
 			<img class="featurette-image  img-responsive " style={ height="500px" width="500px" align='middle'} src="{% static 'img/register.jpg'%}">
-		</div
 		</div>
+
 		<div class="col-md-4">
 			
 			<h4>Not Registered Yet?<br>Join the other developers now</h4><br>
 			<form class="form_horizontal" action='' method="POST">
-				<!-- need to be passed for security purpose -->
+				<!-- need to be passed 	for security purpose -->
 				{% csrf_token %}
 				<div class="form-group form-lg">
 					{% if form.errors %}
-						{% for error in forms.error%}
-						<div class="alert alert-danger" role="alert">{{error}}</div>
-						{% endfor %}
+						
+						<div class="alert alert-danger" role="alert">{{form.errors}}</div>
+						
 						
 					{% endif %}
 					<div class="input-group">

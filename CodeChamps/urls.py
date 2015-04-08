@@ -19,7 +19,7 @@ urlpatterns = patterns('',
     (r'^updateprofile/(?P<ref_id>.*)$','Developers.views.UpdateProfile'),
     (r'^changepassword/$','Developers.views.ChangePassword'),
     (r'^changeprofilepic/$','Developers.views.upload_profile_pic'),
-    
+    (r'^changeprofilepic/removeprofilepic/$','Developers.views.remove_profile_pic'),
 )+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

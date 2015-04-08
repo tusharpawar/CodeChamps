@@ -26,25 +26,32 @@
 {% block content %}
 {% include 'navbar.html'%}
 	<div class="row">
+		<div class="col-md-3"></div>	
 		<div class="col-md-3">
-		</div>
-		<div class="col-md-6">
 			<div >
 					{% if not developer.propic  %}
-						<img src="{% static 'img/profile.png'%}" class="img-circle" style="width:500px;height=500px;">
+						<img src="{% static 'img/profile.png'%}" class="img-circle" style="width:300px;height=300px;">
 					{% else %}
-						<img src="{{developer.propic.url}}" class="img-circle" style="width:500px;height=500px;">
+						<img src="{{developer.propic.url}}" class="img-circle" style="width:300px;height=300px;">
 					{% endif %}
 			</div>
 			<br>
 			<br>
-			<hr>
 			
+			
+			
+		</div>
+		<div class="col-md-3">
 			<form action="" method="POST" enctype="multipart/form-data">
 					{% csrf_token %}
 					{{form.as_p}}
-					<input type="submit" value="Submit" />
+					<input type="submit" class="btn btn-primary "value="Change to new " />
+					
 			</form>
+			<a href='removeprofilepic/'><button class='btn btn-primary'>Remove Profile pic</button></a>
+		</div>
+		<div class='col-md-3'>
+			
 		</div>
 	</div>
 {% endblock %}
