@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from .models import Developer
 from django.contrib.auth import authenticate,login,logout
 import uuid
-
+import os
 #gives a unique ref to user
 def get_refid():
     ref_id=str(uuid.uuid4())[:11].replace('-','').lower()
@@ -16,7 +16,43 @@ def get_refid():
         get_refid()
     except:
         return ref_id
-
+#creating batch files for users for compiling their programs
+#path needs to be changed while deploying
+#D:\project\CodeChamps\static\media\submissions
+def create_batch(developer):
+    path='D:/project/CodeChamps/static/media/submissions/' +developer.user.username
+    if not os.path.exists(path):
+        os.makedirs(path)
+    #java bacth
+    file_name=path+'/sh_java.bat'
+    fo=open(file_name,'wb')
+    in_str='cd '+path+'\n D:\njavac Solution.java 2>compile.txt\njava Solution >run.txt'
+    fo.write(in_str)
+    fo.close()
+    
+    #cpp batch
+    file_name=path+'/sh_cpp.bat'
+    fo=open(file_name,'wb')
+    in_str='cd '+path+'\n D:\ng++ -o Solution Solution.cpp 2>compile.txt\nSolution.exe >run.txt'
+    fo.write(in_str)
+    fo.close()
+    
+    #c batch
+    file_name=path+'/sh_c.bat'
+    fo=open(file_name,'wb')
+    in_str='cd '+path+'\n D:\ngcc -o Solution Solution.c 2>compile.txt\nSolution.exe >run.txt'
+    fo.write(in_str)
+    fo.close()
+    
+    #python bacth
+    file_name=path+'/sh_python.bat'
+    fo=open(file_name,'wb')
+    in_str='cd '+path+'\n D:\npython Solution.py 2>compile.txt >run.txt'
+    fo.write(in_str)
+    fo.close()
+    
+    
+    
 #view for user registraion
 def DeveloperRegistrations(request):
     
@@ -37,6 +73,7 @@ def DeveloperRegistrations(request):
             developer=Developer(user=user,name=form.cleaned_data['name'],ref_id=s,                                                         #propic=form.cleaned_data['propic'],
                       country=form.cleaned_data['country'])
             developer.save()
+            create_batch(developer)
             return HttpResponseRedirect('/profile/'+s)
            
              
@@ -93,7 +130,7 @@ def Profile(request,ref_id):
     if(ref_id==developer1.ref_id):
         allowEdit=True
         
-    context={'developer':developer,'Edit':allowEdit}              
+    context={'developer':developer,'Edit':allowEdit,'developer1':developer1}              
     return render_to_response('profile.html',context,context_instance=RequestContext(request))
 
 #user profile update view
