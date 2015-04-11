@@ -29,7 +29,11 @@
                    
 					<li class="page-scroll">
 						{% if user.is_authenticated %}
-						<a href="/profile/{{developer.ref_id}}">{{user.username}}</a>
+							{% if developer1 %}
+								<a href="/profile/{{developer1.ref_id}}">{{user.username}}</a>
+							{% else %}	
+								<a href="/profile/{{developer.ref_id}}">{{user.username}}</a>
+							{% endif %}
 						{% endif %}
                         
                     </li>
