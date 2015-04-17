@@ -7,7 +7,7 @@ from django.conf import settings
 from Developers import forms
 from django.contrib.auth import views as auth_views
 urlpatterns = patterns('',
-    # Examples:
+    # url for developers
     #url(r'^$', TemplateView.as_view(template_name='base.html')),
     # url(r'^blog/', include('blog.urls')),
     (r'^$','Developers.views.LoginRequest'),   
@@ -20,6 +20,14 @@ urlpatterns = patterns('',
     (r'^changepassword/$','Developers.views.ChangePassword'),
     (r'^changeprofilepic/$','Developers.views.upload_profile_pic'),
     (r'^changeprofilepic/removeprofilepic/$','Developers.views.remove_profile_pic'),
+
+    ###url for problems
+    url(r'^problems/$','problems.views.AllProblems'),
+    url(r'^problems/(?P<title>.*)/$','problems.views.SpecificProblem'),
+    #url(r'^problems/file/$','problems.views.CreateFile'),
+    url(r'^submissions/(?P<title>.*)$', 'problems.views.upload_submission'),
+    #url(r'^submissions/*$','problems.views.display_file'),
+    #url(r'^runbatch/$','problems.views.run_batch'),
 )+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

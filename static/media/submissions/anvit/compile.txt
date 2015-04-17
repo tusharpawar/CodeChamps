@@ -1,0 +1,4 @@
+  File "Solution.py", line 1
+    print 'hello world
+                     ^
+SyntaxError: EOL while scanning string literal

@@ -8,6 +8,7 @@ from .models import Developer
 from django.contrib.auth import authenticate,login,logout
 import uuid
 import os
+
 #gives a unique ref to user
 def get_refid():
     ref_id=str(uuid.uuid4())[:11].replace('-','').lower()
@@ -20,34 +21,34 @@ def get_refid():
 #path needs to be changed while deploying
 #D:\project\CodeChamps\static\media\submissions
 def create_batch(developer):
-    path='D:/project/CodeChamps/static/media/submissions/' +developer.user.username
+    path='F:/tysem2project/project/tmpcodeCHamp/CodeChamps/static/media/submissions/' +developer.user.username
     if not os.path.exists(path):
         os.makedirs(path)
     #java bacth
     file_name=path+'/sh_java.bat'
     fo=open(file_name,'wb')
-    in_str='cd '+path+'\n D:\njavac Solution.java 2>compile.txt\njava Solution >run.txt'
+    in_str='cd '+path+'\n F:\njavac Solution.java 2>compile.txt\njava Solution >run.txt'
     fo.write(in_str)
     fo.close()
     
     #cpp batch
     file_name=path+'/sh_cpp.bat'
     fo=open(file_name,'wb')
-    in_str='cd '+path+'\n D:\ng++ -o Solution Solution.cpp 2>compile.txt\nSolution.exe >run.txt'
+    in_str='cd '+path+'\n F:\ng++ -o Solution Solution.cpp 2>compile.txt\nSolution.exe >run.txt'
     fo.write(in_str)
     fo.close()
     
     #c batch
     file_name=path+'/sh_c.bat'
     fo=open(file_name,'wb')
-    in_str='cd '+path+'\n D:\ngcc -o Solution Solution.c 2>compile.txt\nSolution.exe >run.txt'
+    in_str='cd '+path+'\n F:\ngcc -o Solution Solution.c 2>compile.txt\nSolution.exe >run.txt'
     fo.write(in_str)
     fo.close()
     
     #python bacth
     file_name=path+'/sh_python.bat'
     fo=open(file_name,'wb')
-    in_str='cd '+path+'\n D:\npython Solution.py 2>compile.txt >run.txt'
+    in_str='cd '+path+'\n F:\npython Solution.py 2>compile.txt >run.txt'
     fo.write(in_str)
     fo.close()
     
