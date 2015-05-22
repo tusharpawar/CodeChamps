@@ -38,54 +38,74 @@
 {% block content %}
 {% include 'navbar.html'%}
    
-	
+	<div class="row">
+				<div class='col-md-4'>
+					
+				
+				</div>
+	</div>
 	<div class="row">
 				<div class="col-md-3">
+				
 				</div>
 				<div class="col-md-6">
-					<div>
-						{% if not Submissions.code %}
-							<h3>not submitted code</h3>
-						{% else %}
-							<h3>code submitted succesfully<h3>
+					{% if developer.user.is_authenticated %}
+						<div>
+							{% if not Message %}
+								<h4>Not submitted code</h4>
+							{% else %}
+								<h4>code submitted succesfully<h4>
+							{% endif %}
+						</div>
+						<br>
+						{%if not Message%}
+                                {% if form.errors %}
+                                        <p>form.errors</p>
+                                {%endif%}
+						<form action="" method="POST" enctype="multipart/form-data">
+                            
+							{% csrf_token %}
+							{{form.as_p}}
+							<input type="submit" value="submit"/>
+						</form>
 						{% endif %}
-					</div>
-					<br>
-					<form action="" method="POST" enctype="multipart/form-data">
-						{% csrf_token %}
-						{{form.as_p}}
-<					
-						<!--<input type="text" placeholder='{{user.username}}' name='name'/>-->
-						<input type="submit" value="submit"/>
-
-						
-					</form>
-					{% if Message%}
-						{{Message}}
-						<a href="{{Submissions.Code.url}}" >file</a>
-						<a href='/runbatch/'><input type="submit" value="submit"/></a>
-
-					{% endif %}
-						{% if compile_log %}
-							<h4>compilation:</h4>
-							<div class="well">
-								{% autoescape off %}{{compile_log}}{% endautoescape %}
-							</div>
-						{% endif %}
-						{% if run_log %}
-							<h4>Output:</h4>
-							<div class="well">
-								{% autoescape off %}{{run_log}}{% endautoescape %}
+							{% if compile_log %}
+								<h4>compilation:</h4>
+								<div class="well">
+									{% autoescape off %}{{compile_log}}{% endautoescape %}
+								</div>
+							{% endif %}
+							{% if run_log %}
+								<h4>Output:</h4>
+								<div class="well">
+									{% autoescape off %}{{run_log}}{% endautoescape %}
+									
+								</div>
+							{% endif %}
+							{% if check_log %}
+								<h4>Result:</h4>
+								<div class="well">
+									
+									{%ifequal check_log 'accepted'%}
+										<h4>{{check_log}} &nbsp &nbsp <span class="glyphicon glyphicon-ok" style="color:green" aria-hidden="true"></span></h4>
+										<br>
+										<h4>Marks Obtained:{{marks}}</h4>
+									{%else%}
+									{% ifequal check_log 'Time Out!!'%}
+										<h4>{{check_log}} &nbsp &nbsp <span class="glyphicon glyphicon-time" style="color:red" aria-hidden="true"></span></h4>
+										<br>
+									{%else%}	  
+										<h4>{{check_log}} &nbsp &nbsp <span class="glyphicon glyphicon-remove" style="color:red" aria-hidden="true"></span></h4>
+										<br>
+										<h4>Sorry you got 0 marks!! give it another try!!</h4>
+									{%endifequal%}
+									{%endifequal%}
+								</div>
+							{% endif %}
 								
-							</div>
-						{% endif %}
-						{% if check_log %}
-							<h4>Result:</h4>
-							<div class="well">
-								{{check_log}}
-							</div>
-						{% endif %}
-						
+					{% else %}
+						<div class="alert alert-warning" role="alert"><a href="/" class="alert-link">Login</a> in to submit the solution</div>
+					{% endif %}
 				
 				</div>
 			</div>

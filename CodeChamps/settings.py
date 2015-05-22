@@ -29,8 +29,8 @@ ALLOWED_HOSTS = []
 #email sending settings
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'tysemminiproject@gmail.com'
-EMAIL_HOST_PASSWORD = 'jp5project'
+EMAIL_HOST_USER = 'jambleshantanu95@gmail.com'
+EMAIL_HOST_PASSWORD = 'codechamps'
 EMAIL_PORT = 587
 
 
@@ -53,6 +53,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'Developers',
     'problems',
+    'Challenges',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -85,7 +86,7 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 

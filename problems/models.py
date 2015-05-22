@@ -27,29 +27,10 @@ def _upload_path(instance,filename):
 
 class Submissions(models.Model):
     name=models.CharField(max_length=200)
-    #developer=models.ForeignKey(Developer)
     Code=models.FileField(upload_to=_upload_path,null=True,blank=True)
-##    lang_used_choices=(
-##        ('java','java'),  
-##        ('c','c'),
-##        ('cpp','cpp'),
-##        ('python','python'),
-##        )
-##    lang_used=models.CharField(choices=lang_used_choices,max_length=10)
-
     def get_upload_path(self,filename):
         return "submissions/"+self.name+"/"+filename
 
     def __str__(self):
         return self.Code
-
-
-class Solved(models.Model):
-    username=models.CharField(max_length=200)
-    problemname=models.CharField(max_length=200)
-    marks=models.IntegerField(default=0)
-
-    def __str__(self):
-        return self.problemname
-
 

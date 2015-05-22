@@ -1,0 +1,30 @@
+#include<iostream>
+#include<stdio.h>
+using namespace std;
+int n;
+int calculate()
+{
+	int a=1,b=-1,c=1;
+	int cnt=0;
+	while(c<=n)
+	{
+		c=a+b;
+		b=a;
+		a=c;
+		cnt++;
+	}
+	return cnt;
+}
+
+int main()
+{
+	//freopen("in.txt","r",stdin);
+	//freopen("countfibo_out.txt","w",stdout);
+	int t;
+	cin>>t;
+	while(t--)
+	{
+		cin>>n;
+		cout<<calculate()<<endl;
+	}	
+}

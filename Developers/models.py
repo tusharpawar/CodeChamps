@@ -9,7 +9,7 @@ class Developer(models.Model):
         propic=models.ImageField(upload_to="profilepics/",null=True,blank=True)
         country=models.CharField(max_length=100,default="INDIA")
         ref_id=models.CharField(max_length=100,default="ABC",null=True)
-        problems_list=models.CharField(max_length=1000,null=True)
+        problems_list=models.CharField(max_length=2000,null=True)
         joined_on=models.DateField(auto_now_add=True,auto_now=False)
 
         def __str__(self):

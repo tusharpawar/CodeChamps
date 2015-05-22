@@ -2,32 +2,70 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from problems.models import problem
 from django.core.files import File
-from .form import SubmissionForm
-from .models import Submissions
+import os
+import signal
+import filecmp
 import subprocess
 import time
+from .form import SubmissionForm
+from .models import Submissions
 from Developers.models import Developer
-from .models import Solved
 
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # Create your views here.
 def AllProblems(request):
+    
     if request.user.is_authenticated():
         dev=Developer.objects.get(user=request.user)
         try:
-            solved=Solved.objects.all().filter(username=request.user.username)
+            solved_list=dev.problems_list
+            solved_map={}
+            solve_arr=solved_list.split()
+            for i in solve_arr:
+                print i
+                k=i.index('.')
+                A=int(i[:k])
+                B=(int)(i[k+1:])
+                solved_map[A]=B  
+
         except:
-            solved=None
-    #print solved.username
+            print 'U got the wrong username'
+    else:
+        dev=None
+        solved_list=None
+        solved_map=None
+    
     problems=problem.objects.all().order_by('id')
-    context={'question':problems,'developer':dev,'solved':solved}
+    context={'question':problems,'developer':dev,'solved':solved_list,'solved_map':solved_map}
     return render_to_response('Practice.html',context,context_instance=RequestContext(request));
 
 def SpecificProblem(request,title):
     problem1=problem.objects.get(title=title)
-    context={'question':problem1}
+    
     problem1.body="<br>".join(problem1.body.split("\n"))
+    problem1.input_format="<br>".join(problem1.input_format.split("\n"))
     problem1.output_format="<br>".join(problem1.output_format.split("\n"))
+    try:
+        dev=Developer.objects.get(user=request.user)
+        if dev:
+            solved_list=dev.problems_list.split()
+    except:
+        dev=None
+        solved_list=None
+    
+    print solved_list
+    marks='N/A'
+    if solved_list!=None:
+        for sol in solved_list:
+            i=sol.index('.')
+            k=int (sol[:i])
+            print k,k==problem1.id
 
+            if(k==problem1.id):
+                marks=int(sol[i+1:])
+                break
+
+    context={'question':problem1,'marks':marks} 
     return render_to_response('problem.html',context,context_instance=RequestContext(request));
 
 
@@ -36,52 +74,41 @@ def home(request):
     template="index.html"
     return render(request,template,context)
 
-##def CreateFile(request):
-##    f=open('//problems//hello.txt','w')
-##    myfile=File(f)
-##    myfile.write('writing in file succesfully')
-##    myfile.closed()
-##    f.closed()
-##    context={}
-##    return render(request,'submission.html',context)
 
 #upload file for submission
 def upload_submission(request,title):
     form=SubmissionForm(request.POST, request.FILES)
     submsn=None
-    developer=Developer.objects.get(user=request.user)
+    if(request.user.is_authenticated()):
+        developer=Developer.objects.get(user=request.user)
+    else:
+        developer=None
 
     print 1
     if request.method == 'POST':
         print 2
         if form.is_valid():
-            
-            #dev=Developer.objects.get(user=form.cleaned_data['developer']) #it is a forign key to get the dynamic file path for submission
-            #print form.cleaned_data['developer']
             submsn=Submissions.objects.get_or_create(name=request.user.username)
-            #print submsn[0].Code
-           # if not submsn.code:
-            #    submsn.code.delete(True)
-            #else:
-            
             submsn[0].Code=request.FILES['codefile']
-            #submsn[0].developer=dev
             submsn[0].save()
             print submsn[0].name
             lang=form.cleaned_data['lang_used']
             if(lang=='java'):
-                run_batch_java(request)
+                flg,status=run_batch_java(request,title)
             elif(lang=='cpp'):
-                run_batch_cpp(request)
+                flg,status=run_batch_cpp(request,title)
             elif(lang=='c'):
-                run_batch_c(request)
+                flg,status=run_batch_c(request,title)
             elif(lang=='python'):
-                run_batch_python(request)
-            time.sleep(1)
-            compile_log,run_log,check_log=read_file(request,title)
-            #submsn[0].Code.delete(True)
-             #p=subprocess.Popen('submissions/sh.bat')
-            return render_to_response('submission.html',{'Message':'file uploaded succesfully','compile_log':compile_log,'run_log':run_log,'check_log':check_log,'developer':developer,'Submissions':submsn[0]})
+                flg,status=run_batch_python(request,title)
+            if status=='timeout'and flg==False:
+                compile_log=None
+                run_log=None
+                check_log='Time Out!!'
+                marks=0
+            else:
+                compile_log,run_log,check_log,marks=read_file(request,title)
+            return render_to_response('submission.html',{'Message':'file uploaded succesfully','compile_log':compile_log,'run_log':run_log,'check_log':check_log,'developer':developer,'Submissions':submsn[0],'marks':marks})
         else:
             Error="file invalid"
             return render_to_response('problem.html', {'form':form,'Submissions':submsn[0],'developer':developer,'error':Error},context_instance=RequestContext(request) )
@@ -91,83 +118,271 @@ def upload_submission(request,title):
 
         
 #to run batch file
-def run_batch_java(request):
+def run_batch_java(request,title):
     usrnm=request.user.username
-    if(subprocess.Popen('F://tysem2project/project/tmpcodeCHamp/CodeChamps/static/media/submissions/'+usrnm+'/sh_java.bat')):
-        
-        return True
+    path=os.path.join(BASE_DIR,'static','media','submissions',usrnm)
+    drive=path.split(':')
+    drive=path[0]
+    if not os.path.exists(path):
+        os.mkdirs(path)
+    file_path=os.path.join(path,'sh_java.bat')
+    batch_file=open(file_path,'wb')
+    input_file=title.replace(' ','')+'_in.txt'
+    input_file=os.path.join(BASE_DIR,'static','media','input',input_file)
+    file_data='cd '+path+'\n'+drive+':\n'+'javac Solution.java 2>compile.txt\n'+'java Solution < '+input_file+' >run.txt'
+    batch_file.write(file_data)
+    batch_file.close()
+    flg=False
+    p=subprocess.Popen(file_path)
+    time.sleep(4)
+    status='normal'
+    if p.poll()==None:
+        print os.kill(p.pid, signal.SIGINT)
+        print os.system('taskkill /f /im java.exe')
+        status='timeout'
+        flg=False
+        print 'abnormal termination' 
     else:
-        return False
+        flg=True
+        status='normal'
+    os.remove(file_path)
+    file_path=os.path.join(path,'Solution.java')
+    file_name=title.replace(' ','')+'.txt'
+    file_new=os.path.join(path,file_name)
+    if os.path.exists(file_new):
+        os.remove(file_new)
+    os.rename(file_path,file_new)
+    file_path=os.path.join(path,'Solution.class')
+    os.remove(file_path)
+    return (flg,status)
+
+def run_batch_cpp(request,title):
+    usrnm=request.user.username
+    path=os.path.join(BASE_DIR,'static','media','submissions',usrnm)
+    drive=path.split(':')
+    drive=path[0]
+    if not os.path.exists(path):
+        os.mkdirs(path)
+    file_path=os.path.join(path,'sh_cpp.bat')
+    batch_file=open(file_path,'wb')
+    input_file=title.replace(' ','')+'_in.txt'
+    input_file=os.path.join(BASE_DIR,'static','media','input',input_file)
+    file_data='cd '+path+'\n'+drive+':\n'+'g++ -o Solution Solution.cpp 2>compile.txt\n'+'Solution.exe < '+input_file+' >run.txt'
+    batch_file.write(file_data)
+    batch_file.close()
+    flg=True
+    p=subprocess.Popen(file_path)
+    time.sleep(4)
+    status='normal'
+    if p.poll()==None:
+        print os.kill(p.pid, signal.SIGINT)
+        print os.system('taskkill /f /im Solution.exe')
+        status='timeout'
+        flg=False
+        print 'abnormal termination' 
+    else:
+        flg=True
+        status='normal'
+    os.remove(file_path)
+    file_path=os.path.join(path,'Solution.cpp')
+    file_name=title.replace(' ','')+'.txt'
+    file_new=os.path.join(path,file_name)
+    if os.path.exists(file_new):
+        os.remove(file_new)
+    os.rename(file_path,file_new)
+    file_path=os.path.join(path,'Solution.exe')
+    os.remove(file_path)
+    print 'files removed'
+    return (flg,status)
     
-def run_batch_cpp(request):
+def run_batch_c(request,title):
     usrnm=request.user.username
-    if(subprocess.Popen('F://tysem2project/project/tmpcodeCHamp/CodeChamps/static/media/submissions/'+usrnm+'/sh_cpp.bat')):
-        
-        return True
+    path=os.path.join(BASE_DIR,'static','media','submissions',usrnm)
+    drive=path.split(':')
+    drive=path[0]
+    if not os.path.exists(path):
+        os.mkdirs(path)
+    file_path=os.path.join(path,'sh_c.bat')
+    batch_file=open(file_path,'wb')
+    input_file=title.replace(' ','')+'_in.txt'
+    input_file=os.path.join(BASE_DIR,'static','media','input',input_file)
+    file_data='cd '+path+'\n'+drive+':\n'+'gcc -o Solution Solution.c 2>compile.txt\n'+'Solution.exe < '+input_file+' >run.txt'
+    batch_file.write(file_data)
+    batch_file.close()
+    flg=False
+    p=subprocess.Popen(file_path)
+    time.sleep(4)
+    status='normal'
+    if p.poll()==None:
+        print os.kill(p.pid, signal.SIGINT)
+        print os.system('taskkill /f /im Solution.exe')
+        status='timeout'
+        flg=False
+        print 'abnormal termination' 
     else:
-        return False
+        flg=True
+        status='normal'
+    os.remove(file_path)
+    file_path=os.path.join(path,'Solution.c')
+    file_name=title.replace(' ','')+'.txt'
+    file_new=os.path.join(path,file_name)
     
-def run_batch_c(request):
-    usrnm=request.user.username
-    if(subprocess.Popen('F://tysem2project/project/tmpcodeCHamp/CodeChamps/static/media/submissions/'+usrnm+'/sh_c.bat')):
-        
-        return True
-    else:
-        return False
+    if os.path.exists(file_new):
+        os.remove(file_new)
+    os.rename(file_path,file_new)
+    file_path=os.path.join(path,'Solution.exe')
+    os.remove(file_path)
+    return (flg,status)
     
-def run_batch_python(request):
+def run_batch_python(request,title):
     usrnm=request.user.username
-    print usrnm
-    #path='F://tysem2project/project/CodeChamps/static/media/submissions/'+usrnm+'/sh_python.bat'
-    #print subprocess.Popen(path)
-    if(subprocess.Popen('F://tysem2project/project/tmpcodeCHamp/CodeChamps/static/media/submissions/'+usrnm+'/sh_python.bat')):
-        
-        return True
+    path=os.path.join(BASE_DIR,'static','media','submissions',usrnm)
+    drive=path.split(':')
+    drive=path[0]
+    if not os.path.exists(path):
+        os.mkdirs(path)
+    file_path=os.path.join(path,'sh_cpp.bat')
+    batch_file=open(file_path,'wb')
+    input_file=title.replace(' ','')+'_in.txt'
+    input_file=os.path.join(BASE_DIR,'static','media','input',input_file)
+    file_data='cd '+path+'\n'+drive+':\n'+'pythonw Solution.py 2>compile.txt < '+input_file+' >run.txt'
+    batch_file.write(file_data)
+    batch_file.close()
+    flg=False
+    p=subprocess.Popen(file_path)
+    time.sleep(4)
+    status='normal'
+    if p.poll()==None:
+        print os.kill(p.pid, signal.SIGINT)
+        print os.system('taskkill /f /im pythonw.exe')
+        status='timeout'
+        flg=False
+        print 'abnormal termination' 
     else:
-        return False
+        flg=True
+        status='normal'
+    os.remove(file_path)
+    file_path=os.path.join(path,'Solution.py')
+    file_name=title.replace(' ','')+'.txt'
+    file_new=os.path.join(path,file_name)
+    if os.path.exists(file_new):
+        os.remove(file_new)
+    os.rename(file_path,file_new)
+    return (flg,status)
 
 def read_file(request,title):
     usrnm=request.user.username
-    file1=open('F://tysem2project/project/tmpcodeCHamp/CodeChamps/static/media/submissions/'+usrnm+'/compile.txt')
+    base_path=os.path.join(BASE_DIR,'static','media','submissions',usrnm)
+    try:
+        problem1=problem.objects.get(title=title)
+    except:
+        print 'problem not found'
+    
+
+    path=os.path.join(BASE_DIR,'static','media','submissions',usrnm,'compile.txt')
+    file1=open(path)
     compile_log= file1.read()
-    file2=open('F://tysem2project/project/tmpcodeCHamp/CodeChamps/static/media/submissions/'+usrnm+'/run.txt')
-    run_log=file2.read()
-    input_file=open('F://tysem2project/project/tmpcodeCHamp/CodeChamps/static/media/output/helloworld_out.txt')
-    out_log=input_file.read()
-    check_log=""
-    print out_log+"\n"
-    print run_log
-    print out_log==run_log
-    if(out_log!=run_log):
-        check_log+="not accepted"
-        print check_log
+    file1.close()
+    if compile_log:
+        run_log=None
+        check_log=None
+        marks=0
+        update_marks(problem1,request,marks)
     else:
-        check_log+="accepted"
-        solved=Solved.objects.get_or_create(problemname=title)
-        solved.username=usrnm
-        solved.marks=100
-        
-    run_log="<br>".join(run_log.split("\n"))
-    compile_log="<br>".join(compile_log.split("\n"))
-    print run_log
-    return(compile_log,run_log,check_log)
+        path=os.path.join(BASE_DIR,'static','media','submissions',usrnm,'run.txt')
+        file2=open(path)
+        run_log=file2.read()
+        file2.close()
+        original=title.replace(' ','')+'_out.txt'
+        path=os.path.join(BASE_DIR,'static','media','output',original)
+        output_file=open(path)
+        out_log=output_file.read()
+        output_file.close()
+        check_log=""
+        flg=False
+        run=run_log.split('\n')
+        out=out_log.split('\n')
+        i=0 
+        n=len(out)-1
+        cnt=0
+        while i<n:
+            try:
+                if(out[i]==run[i]):
+                    cnt=cnt+1
+                i=i+1
+            except:
+                break
+        marks=cnt*10
+        print marks,cnt,n
+        if (marks<100 or marks>100 or marks<n*100):
+            if run_log==out_log:
+                marks=100
+            else:
+                marks=marks*100/(n*10)
+        if(marks==0 or marks>100):
+            check_log+="not accepted"
+            update_marks(problem1,request,marks)
+        else:
+            check_log+="accepted"
+            marks=marks
+            run_log=problem1.output_format
+            update_marks(problem1,request,marks)
+    file_path=os.path.join(base_path,'compile.txt')
+    os.remove(file_path)
+    file_path=os.path.join(base_path,'run.txt')
+    os.remove(file_path)
+    if run_log != None:
+        run_log="<br>".join(run_log.split("\n"))
+    if compile_log !=None:
+        compile_log="<br>".join(compile_log.split("\n"))
+    return(compile_log,run_log,check_log,marks)
     
+#updating marks
+def update_marks(problem1,request,marks):
+    try:
+        #   print problem1.title
+        try:
+            dev=Developer.objects.get(user=request.user)
+        except:
+            print 'Developer not found'
+        solved_list=(dev.problems_list)
+        new_s=''   
+        pid=str(problem1.id) 
+        print solved_list,pid,marks
+        if solved_list==None:
+            new_s+=' '+pid+'.'+marks
+        else:       
+            solved_list=str(solved_list)        
+            solved_list=solved_list.split()
+            flg=False
+            for i in solved_list:   
+                ind=i.index('.')
+                tmp=i[:ind]
+                tmrk=int(i[ind+1:])
+
+                if tmp==pid:
+                    #print tmrk
+                    #print marks
+                    #print marks>tmrk
+                    if marks>=tmrk:
+                        marks=str(marks)
+                        new_s+=' '+tmp+'.'+marks
+                    else:
+                        try:
+                            tmrk=str(tmrk)
+                            new_s+=' '+tmp+'.'+tmrk
+                        except:
+                            print 'error hrer'
+                    flg=True
+                else:
+                    tmp1=i[ind+1:]
+                    new_s+=' '+tmp+'.'+tmp1
+            if not flg:
+                new_s+=' '+pid+'.'+marks
+            #print new_s
+            dev.problems_list=new_s
+            dev.save()
+    except:
+         print 'Error'
+          
     
-    
-#def display_file(request):
-    
-##def update_file(request):
-##    #file = UploadedFile.objects.get(pk=id)
-##    if request.method == "POST":
-##       from django.core.files import File
-##       f = open(file.docfile.path,'w+b')
-##       content = request.POST['content']
-##       f.write(content)
-##       file.docfile = File(f)
-##       file.save()
-##       return HttpResponseRedirect('/home/')
-##    else:
-##       docfile = file.docfile.read()
-##       return render_to_response('update_file.html',{'file':file,  'docfile' :
-##                   docfile}, context_instance=RequestContext(request))
-##

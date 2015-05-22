@@ -20,7 +20,7 @@ urlpatterns = patterns('',
     (r'^changepassword/$','Developers.views.ChangePassword'),
     (r'^changeprofilepic/$','Developers.views.upload_profile_pic'),
     (r'^changeprofilepic/removeprofilepic/$','Developers.views.remove_profile_pic'),
-
+    (r'^reset/$','Developers.views.reset_password'),
     ###url for problems
     url(r'^problems/$','problems.views.AllProblems'),
     url(r'^problems/(?P<title>.*)/$','problems.views.SpecificProblem'),
@@ -28,6 +28,13 @@ urlpatterns = patterns('',
     url(r'^submissions/(?P<title>.*)$', 'problems.views.upload_submission'),
     #url(r'^submissions/*$','problems.views.display_file'),
     #url(r'^runbatch/$','problems.views.run_batch'),
+
+     ##url for challenges
+    url(r'^challenges/$','Challenges.views.AllChallenges'),
+    url(r'^challenges/(?P<challenge_name>.*)/$','Challenges.views.SpecificChallenge'),
+    url(r'^register/(?P<challenge_name>.*)/$','Challenges.views.register_for_challenge')
+
+
 )+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

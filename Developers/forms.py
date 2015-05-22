@@ -50,4 +50,9 @@ class ChangePasswordForm(forms.Form):
 class ProfilePicUploadForm(forms.Form):
     """Image upload form."""
     image = forms.ImageField(label='Your new image' )
+
+#password reset form
+class ResetForm(forms.Form):
+    email=forms.EmailField(label="Youe Email")
+    
    

@@ -1,14 +1,15 @@
 from django.shortcuts import render
 from django.shortcuts import render_to_response
 from django.http import HttpResponseRedirect
-from .forms import RegistrationForm,LoginForm,UpdateForm,ChangePasswordForm,ProfilePicUploadForm
+from .forms import RegistrationForm,LoginForm,UpdateForm,ChangePasswordForm,ProfilePicUploadForm,ResetForm
 from django.template import RequestContext
 from django.contrib.auth.models import User
 from .models import Developer
 from django.contrib.auth import authenticate,login,logout
 import uuid
 import os
-
+from django.core.mail import send_mail
+from CodeChamps.settings import *
 #gives a unique ref to user
 def get_refid():
     ref_id=str(uuid.uuid4())[:11].replace('-','').lower()
@@ -16,44 +17,7 @@ def get_refid():
         obj=Developers.objects.get(ref_id=ref_id)
         get_refid()
     except:
-        return ref_id
-#creating batch files for users for compiling their programs
-#path needs to be changed while deploying
-#D:\project\CodeChamps\static\media\submissions
-def create_batch(developer):
-    path='F:/tysem2project/project/tmpcodeCHamp/CodeChamps/static/media/submissions/' +developer.user.username
-    if not os.path.exists(path):
-        os.makedirs(path)
-    #java bacth
-    file_name=path+'/sh_java.bat'
-    fo=open(file_name,'wb')
-    in_str='cd '+path+'\n F:\njavac Solution.java 2>compile.txt\njava Solution >run.txt'
-    fo.write(in_str)
-    fo.close()
-    
-    #cpp batch
-    file_name=path+'/sh_cpp.bat'
-    fo=open(file_name,'wb')
-    in_str='cd '+path+'\n F:\ng++ -o Solution Solution.cpp 2>compile.txt\nSolution.exe >run.txt'
-    fo.write(in_str)
-    fo.close()
-    
-    #c batch
-    file_name=path+'/sh_c.bat'
-    fo=open(file_name,'wb')
-    in_str='cd '+path+'\n F:\ngcc -o Solution Solution.c 2>compile.txt\nSolution.exe >run.txt'
-    fo.write(in_str)
-    fo.close()
-    
-    #python bacth
-    file_name=path+'/sh_python.bat'
-    fo=open(file_name,'wb')
-    in_str='cd '+path+'\n F:\npython Solution.py 2>compile.txt >run.txt'
-    fo.write(in_str)
-    fo.close()
-    
-    
-    
+        return ref_id    
 #view for user registraion
 def DeveloperRegistrations(request):
     
@@ -74,7 +38,6 @@ def DeveloperRegistrations(request):
             developer=Developer(user=user,name=form.cleaned_data['name'],ref_id=s,                                                         #propic=form.cleaned_data['propic'],
                       country=form.cleaned_data['country'])
             developer.save()
-            create_batch(developer)
             return HttpResponseRedirect('/profile/'+s)
            
              
@@ -88,6 +51,7 @@ def DeveloperRegistrations(request):
 
 #view for login
 def LoginRequest(request):
+    print request.user
     if request.user.is_authenticated():
         dev=Developer.objects.get(user=request.user)
         red_link='/profile/'+dev.ref_id
@@ -121,17 +85,22 @@ def LogoutRequest(request):
 
 #user profile view
 def Profile(request,ref_id):
+    print request,ref_id
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/login/')
     
     developer=Developer.objects.get(ref_id=ref_id)    
-    #print ref_id,developer
     developer1=Developer.objects.get(user=request.user)
     allowEdit=False
     if(ref_id==developer1.ref_id):
         allowEdit=True
-        
-    context={'developer':developer,'Edit':allowEdit,'developer1':developer1}              
+    solve_list=developer.problems_list
+    if solve_list:
+        solve_list=solve_list.split()
+        count=len(solve_list)
+    else:
+        count=0
+    context={'developer':developer,'Edit':allowEdit,'developer1':developer1,'count':count}              
     return render_to_response('profile.html',context,context_instance=RequestContext(request))
 
 #user profile update view
@@ -212,7 +181,7 @@ def upload_profile_pic(request):
             return HttpResponseRedirect(red_link)
         else:
             Error="image invlaid"
-            return render_to_response('changeprofilepic.html',        {'form':form,'developer':dev,'error':Error},context_instance=RequestContext(request)) 
+            return render_to_response('changeprofilepic.html',{'form':form,'developer':dev,'error':Error},context_instance=RequestContext(request)) 
     else:
                 return render_to_response('changeprofilepic.html',  {'form':form,'developer':dev},context_instance=RequestContext(request)) 
     
@@ -228,3 +197,49 @@ def remove_profile_pic(request):
         dev.propic.delete(True)
         red_link='/profile/'+dev.ref_id
         return HttpResponseRedirect(red_link)
+#password reset
+def sendMail(request,email):
+    try:
+        try:
+            user=User.objects.get(email=email)
+            print user
+        except:
+            print'dewv ads'
+        password=str(uuid.uuid4())[:11].replace('-','').lower()
+        print 1
+        user.set_password(password)
+        print 2
+        user.save()
+        print 3
+        print password
+        subject='Password reset'
+        body='You requested a password reset .\n Below is the new login username password for you account,make sure you change it later \n Username='+user.username+'\nPassword='+password;
+        list_emails=[email,]
+        print 4
+        from_email=EMAIL_HOST_USER 
+        print subject,body,from_email,list_emails[0]
+        print send_mail(subject,body,from_email,list_emails,fail_silently=False)
+
+        return 'Check your inbox.Thank you!!'
+    except:
+        return 'mail not sent'
+    
+#reset form
+def reset_password(request):
+    form=ResetForm(request.POST)
+    message=''
+    if request.method=="POST":
+        if form.is_valid():
+            email=form.cleaned_data['email']
+            print email
+            message=sendMail(request,email)
+            print message
+            context={'message':message}
+            render_to_response('reset_password.html',context,context_instance=RequestContext(request))
+        else:
+            Error="form data invalid"
+            return render_to_response('reset_password.html',{'form':form,'error':Error},context_instance=RequestContext(request)) 
+    else:
+        Error="Something wennt wrong please reeneter the email id"
+        return render_to_response('reset_password.html',{'form':form,'error':Error},context_instance=RequestContext(request)) 
+    return render_to_response('reset_password.html',{'form':form,'message':message},context_instance=RequestContext(request)) 

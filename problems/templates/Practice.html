@@ -26,56 +26,11 @@
 <body id="page-top" class="index">
 {% block content %}
 {% include 'navbar.html'%}
-    <!-- Navigation-->
-    <!--<nav class="navbar navbar-default navbar-fixed-top">
-        <div class="container">-->
-            <!-- Brand and toggle get grouped for better mobile display 
-            <div class="navbar-header page-scroll">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#page-top">Code Champs</a>
-            </div>
-
-            <!-- Collect the nav links, forms, and other content for toggling -->
-            <!--<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                <ul class="nav navbar-nav navbar-right">
-                    <li class="hidden">
-                        <a href="#page-top"></a>
-                    </li>
-                    <li class="page-scroll">
-                        <a href="#portfolio">Problems</a>
-                    </li>
-                    <li class="page-scroll">
-                        <a href="#about">About</a>
-                    </li>
-                    <li class="page-scroll">
-                        <a href="#contact">Contact</a>
-                    </li>
-                </ul>
-            </div>-->
-            <!-- /.navbar-collapse 
-        </div>
-        <!-- /.container-fluid
-    </nav>  -->
-
-    <!-- Header 
-    <header>
-        <div class="container">
-            <div class="row">
-            </div>
-        </div>
-    </header>-->
-	
-	<!-- tabble nav
-	<br><br><br><br><br><br><br><br><br>-->
+    
 	<div class="container">
 		<div class="row">
 			
-			                <img src="{%static 'img/header.png'%}" style=" height: 254px; width: 1169px;padding: 20px;">
+			                <img src="{%static 'img/practice1.png'%}" style=" height: 254px; width: 1169px;padding: 20px;">
 
 
 		</div>
@@ -92,13 +47,13 @@
 					
 						
 						    <table class="table table-striped table-hover">
-								<caption>Table</caption>
+								
 								<thead>
 									<tr>
 										<th>No.</th>
 										<th>Problems</th>
 										<th style="pull-right:20px">Solve</th>
-										<th>Marks</th>
+										
 									</tr>
 								</thead>
 								<tbody>
@@ -110,23 +65,19 @@
 										<td>{{problem.id}}</td>
 										<td>{{problem}}</td>
 										
-										{% if solved %}
-										{% for solved in solved %}
-										
-											
-											{% ifequal problem.title solved.problemname %}
+										{% if solved_map %}
+											{% if problem.id in solved_map%}
 												<td><a href='/problems/{{problem.title}}/'><button type="button"  class="btn btn-success" >Solved</button></a></td>
-												<td>{{solved.marks}}</td>
-											{% else %}
-												<td><a href='/problems/{{problem.title}}/'><button type="button"  class="btn btn-primary" >Solve</button></a></td>
-												<td>N/A</td>
 												
-												{% endifequal %}
-											
-											
-										{% endfor %}
-										
-											{% endif %}
+											{%else %}
+												<td><a href='/problems/{{problem.title}}/'><button type="button"  class="btn btn-primary" >Solve</button></a></td>
+												
+												
+											{%endif%}
+										{%else%}
+											<td><a href='/problems/{{problem.title}}/'><button type="button"  class="btn btn-primary" >Solve</button></a></td>
+											<td>N/A</td>
+										{% endif %}
 										
 									</tr>
 									{% endfor %}

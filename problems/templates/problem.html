@@ -51,7 +51,14 @@
 	<div class="container">
 		
 		<div class ="row">
-			<h2>{{question}}</h2>
+			<div class='col-sm-5'>
+			<h2>{{question}}</h2><br>
+			</div>
+			<div class='col-sm-5'>
+				<br>
+				<p>Marks={{marks}}</p>
+			</div>
+			
 										
 		</div>
 		<hr>
@@ -70,7 +77,8 @@
 									
 									
 										<div class=container>
-											<p> {% autoescape off %}{{question.body}}{% endautoescape %}</p>
+											<p> {% autoescape off %}{{question.body}}{% endautoescape %}</p><br>
+											
 											<hr>
 											
 											<h4>Input</h4>
@@ -151,8 +159,15 @@
 				 
                 
             </div>
-			
-			<a href="/submissions/{{question}}"><button type="button"  class="btn btn-primary" >Submit</button></a>
+			<div class="row">
+				<div class='col-md-4'>
+					{% if user.is_authenticated%}
+						<a href="/submissions/{{question}}"><button type="button"  class="btn btn-primary" >Submit</button></a>
+					{% else %}
+						<div class="alert alert-warning" role="alert"><a href="/" class="alert-link">Login</a> in to submit the solution</div>
+					{% endif %}
+				</div>
+			</div>
 		</div>
 			<style>
 			.rightborder{
