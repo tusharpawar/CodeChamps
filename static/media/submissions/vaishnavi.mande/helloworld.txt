@@ -1,11 +1,10 @@
-import java.io.*;
-import java.util.*;
-class Solution{
-	public static void main(String [] args)throws Exception
+class Solution 
+{
+	public static void main(String[] args) 
 	{
-		BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
-		int n=Integer.parseInt(br.readLine());
-		while(n-->0)
-			System.out.println("hello");
+		System.out.println("hello world");
+		System.out.println("hello world");
+		System.out.println("hello world");
+		System.out.println("hello world");
 	}
 }

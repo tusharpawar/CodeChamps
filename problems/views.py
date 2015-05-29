@@ -1,12 +1,12 @@
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from problems.models import problem
 from django.core.files import File
 import os
 import signal
 import filecmp
 import subprocess
 import time
+from problems.models import problem
 from .form import SubmissionForm
 from .models import Submissions
 from Developers.models import Developer
@@ -125,35 +125,49 @@ def run_batch_java(request,title):
     drive=path[0]
     if not os.path.exists(path):
         os.mkdirs(path)
-    file_path=os.path.join(path,'sh_java.bat')
-    batch_file=open(file_path,'wb')
+    file_path=""
+    file_path_compile=os.path.join(path,'sh_java.bat')
+    file_path_run=os.path.join(path,'sh_java_run.bat')
+    batch_file_compile=open(file_path_compile,'wb')
+    batch_file_run=open(file_path_run,'wb')
     input_file=title.replace(' ','')+'_in.txt'
     input_file=os.path.join(BASE_DIR,'static','media','input',input_file)
-    file_data='cd '+path+'\n'+drive+':\n'+'javac Solution.java 2>compile.txt\n'+'java Solution < '+input_file+' >run.txt'
-    batch_file.write(file_data)
-    batch_file.close()
+    file_data='cd '+path+'\n'+drive+':\n'+'javac Solution.java 2>compile.txt'
+    batch_file_compile.write(file_data)
+    batch_file_compile.close()
+    file_data=file_data='cd '+path+'\n'+drive+':\n'+'java Solution < '+input_file+' >run.txt'
+    batch_file_run.write(file_data)
+    batch_file_run.close()
     flg=False
-    p=subprocess.Popen(file_path)
-    time.sleep(4)
+    p=subprocess.Popen(file_path_compile)
+    p.wait()
     status='normal'
-    if p.poll()==None:
-        print os.kill(p.pid, signal.SIGINT)
-        print os.system('taskkill /f /im java.exe')
-        status='timeout'
-        flg=False
-        print 'abnormal termination' 
-    else:
-        flg=True
-        status='normal'
-    os.remove(file_path)
+    file_path=os.path.join(path,'compile.txt')
+    compile_txt=open(file_path)
+    print compile_txt.read()==None
+    if compile_txt.read()=="":
+        p=subprocess.Popen(file_path_run)
+        time.sleep(4)
+        if p.poll()==None:
+            os.kill(p.pid, signal.SIGINT)
+            os.system('taskkill /f /im java.exe')
+            status='timeout'
+            flg=False
+            print 'abnormal termination' 
+        else:
+            flg=True
+            status='normal'
+        file_path=os.path.join(path,'Solution.class')
+        os.remove(file_path)
+    os.remove(file_path_run)
+    if os.path.exists(file_path_compile):
+        os.remove(file_path_compile)
     file_path=os.path.join(path,'Solution.java')
     file_name=title.replace(' ','')+'.txt'
     file_new=os.path.join(path,file_name)
     if os.path.exists(file_new):
         os.remove(file_new)
     os.rename(file_path,file_new)
-    file_path=os.path.join(path,'Solution.class')
-    os.remove(file_path)
     return (flg,status)
 
 def run_batch_cpp(request,title):
@@ -163,37 +177,55 @@ def run_batch_cpp(request,title):
     drive=path[0]
     if not os.path.exists(path):
         os.mkdirs(path)
-    file_path=os.path.join(path,'sh_cpp.bat')
-    batch_file=open(file_path,'wb')
+    file_path=""
+    file_path_compile=os.path.join(path,'sh_cpp.bat')
+    file_path_run=os.path.join(path,'sh_cpp_run.bat')
+    batch_file_compile=open(file_path_compile,'wb')
+    batch_file_run=open(file_path_run,'wb')
     input_file=title.replace(' ','')+'_in.txt'
     input_file=os.path.join(BASE_DIR,'static','media','input',input_file)
-    file_data='cd '+path+'\n'+drive+':\n'+'g++ -o Solution Solution.cpp 2>compile.txt\n'+'Solution.exe < '+input_file+' >run.txt'
-    batch_file.write(file_data)
-    batch_file.close()
-    flg=True
-    p=subprocess.Popen(file_path)
-    time.sleep(4)
+    file_data='cd '+path+'\n'+drive+':\n'+'g++ -o Solution Solution.cpp 2>compile.txt'
+    batch_file_compile.write(file_data)
+    batch_file_compile.close()
+    file_data=file_data='cd '+path+'\n'+drive+':\n'+'Solution.exe < '+input_file+' >run.txt'
+    batch_file_run.write(file_data)
+    batch_file_run.close()
+    flg=False
+    p=subprocess.Popen(file_path_compile)
+    #ime.sleep(4)
+    p.wait()
     status='normal'
-    if p.poll()==None:
-        print os.kill(p.pid, signal.SIGINT)
-        print os.system('taskkill /f /im Solution.exe')
-        status='timeout'
-        flg=False
-        print 'abnormal termination' 
-    else:
-        flg=True
-        status='normal'
-    os.remove(file_path)
+    file_path=os.path.join(path,'compile.txt')
+    compile_txt=open(file_path)
+    print compile_txt.read()==None
+    if compile_txt.read()=="":
+        file_path=os.path.join(path,'Solution.exe')
+        if os.path.exists(file_path):
+            p=subprocess.Popen(file_path_run)
+            time.sleep(4)
+        if p.poll()==None:
+            os.kill(p.pid, signal.SIGINT)
+            os.system('taskkill /f /im Solution.exe')
+            status='timeout'
+            flg=False
+            print 'abnormal termination' 
+        else:
+            flg=True
+            status='normal'
+        file_path=os.path.join(path,'Solution.exe')
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    os.remove(file_path_run)
+    if os.path.exists(file_path_compile):
+        os.remove(file_path_compile)
     file_path=os.path.join(path,'Solution.cpp')
     file_name=title.replace(' ','')+'.txt'
     file_new=os.path.join(path,file_name)
     if os.path.exists(file_new):
         os.remove(file_new)
     os.rename(file_path,file_new)
-    file_path=os.path.join(path,'Solution.exe')
-    os.remove(file_path)
-    print 'files removed'
     return (flg,status)
+
     
 def run_batch_c(request,title):
     usrnm=request.user.username
@@ -202,36 +234,53 @@ def run_batch_c(request,title):
     drive=path[0]
     if not os.path.exists(path):
         os.mkdirs(path)
-    file_path=os.path.join(path,'sh_c.bat')
-    batch_file=open(file_path,'wb')
+    file_path=""
+    file_path_compile=os.path.join(path,'sh_c.bat')
+    file_path_run=os.path.join(path,'sh_c_run.bat')
+    batch_file_compile=open(file_path_compile,'wb')
+    batch_file_run=open(file_path_run,'wb')
     input_file=title.replace(' ','')+'_in.txt'
     input_file=os.path.join(BASE_DIR,'static','media','input',input_file)
-    file_data='cd '+path+'\n'+drive+':\n'+'gcc -o Solution Solution.c 2>compile.txt\n'+'Solution.exe < '+input_file+' >run.txt'
-    batch_file.write(file_data)
-    batch_file.close()
+    file_data='cd '+path+'\n'+drive+':\n'+'gcc -o Solution Solution.c 2>compile.txt'
+    batch_file_compile.write(file_data)
+    batch_file_compile.close()
+    file_data=file_data='cd '+path+'\n'+drive+':\n'+'Solution.exe < '+input_file+' >run.txt'
+    batch_file_run.write(file_data)
+    batch_file_run.close()
     flg=False
-    p=subprocess.Popen(file_path)
-    time.sleep(4)
+    p=subprocess.Popen(file_path_compile)
+    #ime.sleep(4)
+    p.wait()
     status='normal'
-    if p.poll()==None:
-        print os.kill(p.pid, signal.SIGINT)
-        print os.system('taskkill /f /im Solution.exe')
-        status='timeout'
-        flg=False
-        print 'abnormal termination' 
-    else:
-        flg=True
-        status='normal'
-    os.remove(file_path)
+    file_path=os.path.join(path,'compile.txt')
+    compile_txt=open(file_path)
+    print compile_txt.read()==None
+    if compile_txt.read()=="":
+        file_path=os.path.join(path,'Solution.exe')
+        if os.path.exists(file_path):
+            p=subprocess.Popen(file_path_run)
+            time.sleep(4)
+        if p.poll()==None:
+            os.kill(p.pid, signal.SIGINT)
+            os.system('taskkill /f /im Solution.exe')
+            status='timeout'
+            flg=False
+            print 'abnormal termination' 
+        else:
+            flg=True
+            status='normal'
+        file_path=os.path.join(path,'Solution.exe')
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    os.remove(file_path_run)
+    if os.path.exists(file_path_compile):
+        os.remove(file_path_compile)
     file_path=os.path.join(path,'Solution.c')
     file_name=title.replace(' ','')+'.txt'
     file_new=os.path.join(path,file_name)
-    
     if os.path.exists(file_new):
         os.remove(file_new)
     os.rename(file_path,file_new)
-    file_path=os.path.join(path,'Solution.exe')
-    os.remove(file_path)
     return (flg,status)
     
 def run_batch_python(request,title):
@@ -241,16 +290,16 @@ def run_batch_python(request,title):
     drive=path[0]
     if not os.path.exists(path):
         os.mkdirs(path)
-    file_path=os.path.join(path,'sh_cpp.bat')
-    batch_file=open(file_path,'wb')
+    file_path_compile=os.path.join(path,'sh_cpp.bat')
+    batch_file_compile=open(file_path_compile,'wb')
     input_file=title.replace(' ','')+'_in.txt'
     input_file=os.path.join(BASE_DIR,'static','media','input',input_file)
     file_data='cd '+path+'\n'+drive+':\n'+'pythonw Solution.py 2>compile.txt < '+input_file+' >run.txt'
-    batch_file.write(file_data)
-    batch_file.close()
+    batch_file_compile.write(file_data)
+    batch_file_compile.close()
     flg=False
-    p=subprocess.Popen(file_path)
-    time.sleep(4)
+    p=subprocess.Popen(file_path_compile)
+    time.sleep(5)
     status='normal'
     if p.poll()==None:
         print os.kill(p.pid, signal.SIGINT)
@@ -261,13 +310,13 @@ def run_batch_python(request,title):
     else:
         flg=True
         status='normal'
-    os.remove(file_path)
-    file_path=os.path.join(path,'Solution.py')
+    os.remove(file_path_compile)
+    file_path_compile=os.path.join(path,'Solution.py')
     file_name=title.replace(' ','')+'.txt'
     file_new=os.path.join(path,file_name)
     if os.path.exists(file_new):
         os.remove(file_new)
-    os.rename(file_path,file_new)
+    os.rename(file_path_compile,file_new)
     return (flg,status)
 
 def read_file(request,title):
@@ -283,13 +332,17 @@ def read_file(request,title):
     file1=open(path)
     compile_log= file1.read()
     file1.close()
-    if compile_log:
+    path=os.path.join(BASE_DIR,'static','media','submissions',usrnm,'run.txt')
+    file2=None
+    if os.path.exists(path):
+        file2=open(path)
+    print compile_log
+    if compile_log or file2==None:
         run_log=None
         check_log=None
         marks=0
         update_marks(problem1,request,marks)
     else:
-        path=os.path.join(BASE_DIR,'static','media','submissions',usrnm,'run.txt')
         file2=open(path)
         run_log=file2.read()
         file2.close()
@@ -319,7 +372,7 @@ def read_file(request,title):
                 marks=100
             else:
                 marks=marks*100/(n*10)
-        if(marks==0 or marks>100):
+        if(marks==0 or marks>100) or len(run_log)>len(out_log):
             check_log+="not accepted"
             update_marks(problem1,request,marks)
         else:
@@ -327,10 +380,12 @@ def read_file(request,title):
             marks=marks
             run_log=problem1.output_format
             update_marks(problem1,request,marks)
-    file_path=os.path.join(base_path,'compile.txt')
-    os.remove(file_path)
-    file_path=os.path.join(base_path,'run.txt')
-    os.remove(file_path)
+    file_path_compile=os.path.join(base_path,'compile.txt')
+    if os.path.exists(file_path_compile):
+        os.remove(file_path_compile)
+    file_path_compile=os.path.join(base_path,'run.txt')
+    if os.path.exists(file_path_compile):
+        os.remove(file_path_compile)
     if run_log != None:
         run_log="<br>".join(run_log.split("\n"))
     if compile_log !=None:
