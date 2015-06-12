@@ -192,7 +192,7 @@ def run_batch_cpp(request,title):
     batch_file_run.close()
     flg=False
     p=subprocess.Popen(file_path_compile)
-    #ime.sleep(4)
+    #time.sleep(4)
     p.wait()
     status='normal'
     file_path=os.path.join(path,'compile.txt')
